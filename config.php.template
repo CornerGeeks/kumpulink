@@ -1,0 +1,6 @@
+<?php
+$dbhost="localhost"; //CHANGE IF NOT LOCAL
+$dbname="DATABASE_NAME_HERE";
+$dbuser="DATABASE_USERNAME_HERE";
+$dbpass="DATABASE_PASSWORD_HERE";
+?>
