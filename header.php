@@ -4,6 +4,17 @@ require_once("config.php");
 R::setup("mysql:host=$dbhost;dbname=$dbname",$dbuser,$dbpass);
 session_start();
 
+function get_url_vars()
+{
+	$params = array();
+	$parts = explode('/',$_SERVER['REQUEST_URI']);
+	for($i=3;$i<count($parts)-1;$i+=2){
+	  $params[$parts[$i]]=$parts[$i+1];
+	}
+	$params["mode"]=$_SERVER['REQUEST_METHOD'];
+	return $params;
+}
+
 function strip_slashes_recursive($mixed){
 	if(is_string($mixed))
     	return stripslashes($mixed);	
