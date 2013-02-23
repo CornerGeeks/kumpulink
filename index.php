@@ -1,6 +1,16 @@
 <?php
 require_once("header.php");
 
+$vars=get_url_vars();
+
+if(isset($vars["tag"])){
+$ids=R::getCol('select bookmark from tag where text=?',array($vars["tag"]));
+$bookmarks=R::batch('bookmark',$ids);
+
+} else {
+$bookmarks=R::find('bookmark');
+
+}
 
 ?><!DOCTYPE html>
 <html lang="en">
@@ -52,12 +62,11 @@ require_once("header.php");
       <!-- Everything you want hidden at 940px or less, place within here -->
       <div class="nav-collapse collapse">
       <ul class="nav">
-      <li class="active"><a href="#">Home</a></li>
-	  <li><a href="#">Bookmarklet</a></li>
+      <li class="active"><a href="./">Home</a></li>
 	  </ul>
-	 <form class="navbar-form pull-right">
-	  <input type="text" class="span2">
-	  <button type="submit" class="btn">Submit</button>
+	 <form action="search.php" class="navbar-form pull-right">
+	  <input type="text" name="tag" class="span2">
+	  <button type="submit" class="btn">Search Tags</button>
 	</form>
       </div>
  
@@ -70,7 +79,7 @@ require_once("header.php");
 <div class="media span6">
 <?php
 
-$bookmarks=R::find('bookmark');
+
 
 foreach($bookmarks as $b){
 $uri=parse_url($b->uri);
@@ -86,16 +95,17 @@ $uri=parse_url($b->uri);
     foreach($tags as $t){?>
     <li>
 	  <div class="btn-group">
-		<button class="btn btn-small"><?php echo htmlentities($t->text); ?></button>
+		<a href="./?/tag/<?php echo htmlentities($t->text); ?>" class="btn btn-small"><?php echo htmlentities($t->text); ?></a>
 		<!--<button class="btn btn-small">x</button>-->
 	  </div>
 	 </li>
 	 <?php } ?>
 	</ul>
+	<!--
 	<div class="input-append input-block-level">
 	  <input class="span2" type="text" placeholder="Add tags, seperated by commas.">
 	  <button class="btn" type="button">+</button>
-	</div>
+	</div>-->
   </div>
 </div>
 <?php } ?>
