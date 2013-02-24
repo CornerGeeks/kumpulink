@@ -87,8 +87,8 @@ $uri=parse_url($b->uri);
   <div class="media">
   <a class="pull-left" href="http://twitter.com/mfirdaus/"><img src="http://www.google.com/s2/u/0/favicons?domain=<?php echo $uri["host"]; ?>"/></a>
   <div class="media-body">
-    <h4 class="media-heading"><a href="<?php echo htmlentities($b->uri); ?>"><?php echo htmlentities($b->title); ?></a></h4>
-    <p><?php echo htmlentities($b->description); ?></p>
+    <h4 class="media-heading"><a href="<?php echo htmlentities($b->uri); ?>"><?php echo htmlentities(utf8_decode($b->title)); ?></a></h4>
+    <p><?php echo htmlentities(utf8_decode($b->description)); ?></p>
     <ul class="inline">
     <?php 
     $tags=R::find('tag','bookmark = ?',array($b->id));
