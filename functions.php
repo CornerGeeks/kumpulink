@@ -14,11 +14,12 @@ function add_tags($id,$tags){
 	return true;
 }
 
-function add_bookmark($uri,$title,$description){
+function add_bookmark($uri,$title,$description,$moderated = false){
 	$bookmark=R::dispense("bookmark"); //hrm. should we protect for XSS before or after SQL insert?
 	$bookmark->title=$title;
 	$bookmark->description=$description;
 	$bookmark->uri=$uri;
+	$bookmark->moderated=$moderated;
 	$bookmark_id=R::store($bookmark);
 	return $bookmark_id; //wonder if should return $bookmark instead
 }
