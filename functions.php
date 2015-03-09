@@ -67,7 +67,7 @@ class User
 	private static function register($arr){  //$arr passed from $_POST ?
 		self::init();
 		if(isset($arr["username"],$arr["password"])){ //variables set
-		if(!self::get_id($arr["username"]){  //username doesn't exist
+		if(!self::get_id($arr["username"])){  //username doesn't exist
 			$user=R::dispense("user");
 			$user->name=$arr["username"];
 			$user->password=hasher($arr["password"]);
