@@ -24,37 +24,34 @@ function add_bookmark($uri,$title,$description,$moderated = false){
 	return $bookmark_id; //wonder if should return $bookmark instead
 }
 
-if(isset($_POST["action"])){
-	if($_POST["action"]=="logout"){
-		unset($_SESSION);
-		session_destroy();
-	}
-}
-
 class User
 {
 	private static $user_id=0;
+	private static $user_name='';
+	private static $moderator=false;
 	private static $initialized=false;
 	private static function init(){
 		if(self::$initialized)
 			return;
-			
+
 		if(isset($_SESSION["user_id"])){
 			self::$user_id=$_SESSION["user_id"];
+			$user=R::findOne("user","id = ?",array($_SESSION["user_id"]));
+			if($user)
+				self::save_user_data_to_session($user);
 		}
+		self::$initialized = true;
 	}
-	
-	private static function login($username,$password){
+	public static function login($username,$password){
 		self::init();
 		$user=R::findOne("user","name = ?",array($username));
-		if($user->id && check_hash($password,$user->password)){
-			$_SESSION["user_id"]=$user->id;
-			self::$user_id=$user->id;
+		if($user && $user->id && check_hash($password,$user->password)){
+			self::save_user_data_to_session($user);
 		}
 		return self::$user_id;
 	}
 	
-	private static function logout(){
+	public static function logout(){
 		unset($_SESSION);
 		session_destroy();
 		self::$user_id=0;
@@ -63,25 +60,41 @@ class User
 	private static function get_id($username){
 		self::init();
 		$existing=R::findOne("user","name = ?",array($username));
-		return $existing->id;
+		if($existing)
+			return $existing->id;
+		else
+			return 0;
 	}
-	private static function register($arr){  //$arr passed from $_POST ?
+	public static function get_name(){
 		self::init();
-		if(isset($arr["username"],$arr["password"])){ //variables set
-		if(!self::get_id($arr["username"])){  //username doesn't exist
-			$user=R::dispense("user");
-			$user->name=$arr["username"];
-			$user->password=hasher($arr["password"]);
-			self::$user_id=R::store($user);
-		} //username doestn't exist
+		return self::$user_name;
+	}
+	public static function is_moderator(){
+		self::init();
+		return self::$moderator;
+	}
+	public static function register($username, $password){  //$arr passed from $_POST ?
+		self::init();
+		if(isset($username,$password)){ //variables set
+			if(!self::get_id($username)){  //username doesn't exist
+				$user=R::dispense("user");
+				$user->name=$username;
+				$user->password=hasher($password);
+				$user->moderator = false;
+				self::$user_id=R::store($user);
+			} //username doestn't exist
 		} //variables set
 		return self::$user_id;
 	}
-	private static function logged_in(){
+	public static function logged_in(){
 		self::init();
 		return self::$user_id;
+	}
+	private static function save_user_data_to_session($user){
+		$_SESSION["user_id"]  =self::$user_id  =$user->id;
+		$_SESSION["user_name"]=self::$user_name=$user->name;
+		$_SESSION["moderator"]=self::$moderator=$user->moderator;
 	}
 }
 
 ?>
-

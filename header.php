@@ -1,9 +1,11 @@
 <?php
 require_once("rb.php");
 require_once("config.php");
+require_once("functions.php");
+require_once("class/security.php");
 R::setup("mysql:host=$dbhost;dbname=$dbname",$dbuser,$dbpass);
 session_start();
-
+$msg = array();
 function get_url_vars()
 {
 	$params = array();

@@ -1,14 +1,58 @@
 <?php
 require_once("header.php");
+require_once("functions.php");
+
+
+if(isset($_POST["action"])){
+  if($_POST["action"]=="logout"){
+    unset($_SESSION);
+    session_destroy();
+    session_start();
+  }
+  if($_POST["action"]=="register"){
+    if(Security::validate_csrf('register')) {
+      if(User::register($_POST['user'], $_POST['password'])) {
+        if(User::login($_POST['user'], $_POST['password'])) {
+          $msg['success'][] = 'Registration successful';
+        }
+        else {
+          $msg['warning'][] = 'Registration successful but failed to log you in';
+        }
+      }
+      else {
+        $msg['error'][] = 'Registration failed';
+      }
+    }
+    else {
+      $msg['error'][] = 'Invalid CSRF token';
+    }
+  }
+  if($_POST["action"]=="login"){
+    if(Security::validate_csrf('login')){
+      if(User::login($_POST['user'], $_POST['password'])){
+        $msg['success'][] = 'Welcome!';
+      }
+      else{
+        $msg['error'][] = 'Failed login';
+      }
+    }
+    else {
+      $msg['error'][] = 'Invalid CSRF token';
+    }
+  }
+}
 
 $vars=get_url_vars();
 
 if(isset($vars["tag"])){
 $ids=R::getCol('select bookmark from tag where text=?',array($vars["tag"]));
 $bookmarks=R::batch('bookmark',$ids);
-
+} elseif(isset($vars["moderate"])) {
+  $bookmarks=R::find('bookmark', 'moderated is null or moderated = false');
+} elseif(isset($vars["approved"])) {
+  $bookmarks=R::find('bookmark', 'moderated = true');
 } else {
-$bookmarks=R::find('bookmark');
+  $bookmarks=R::find('bookmark');
 
 }
 
@@ -31,6 +75,12 @@ $bookmarks=R::find('bookmark');
 <style>
 .inline .btn {
 	margin-bottom:5px;
+}
+.pull-right-padding {
+  padding-right: 1em;
+}
+.dropdown-padding{
+  padding: 1em;
 }
 </style>
 
@@ -62,25 +112,78 @@ $bookmarks=R::find('bookmark');
       <!-- Everything you want hidden at 940px or less, place within here -->
       <div class="nav-collapse collapse">
       <ul class="nav">
-      <li class="active"><a href="./">Home</a></li>
-	  </ul>
-	 <form action="search.php" class="navbar-form pull-right">
-	  <input type="text" name="tag" class="span2">
-	  <button type="submit" class="btn">Search Tags</button>
-	</form>
+        <li><a href="./">Home</a></li>
+        <li><a href="?/approved/items">Approved</a></li>
+        <li><a href="?/moderate/items">To Moderate</a></li>
+      </ul>
+      <ul class="nav pull-right">
+        <?php if(!User::logged_in()) : ?>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            Login
+          </a>
+          <ul class="dropdown-menu">
+            <li class='dropdown-padding'>
+             <form action="index.php?" method="POST" class="navbar-form">
+              <?php echo Security::generate_and_print_form_inputs('login')?>
+              <input type="hidden" name="action" value="login">
+              <input type="text" name="user"  placeholder="username">
+              <input type="password" name="password"  placeholder="password">
+              <button type="submit" class="btn">Login</button>
+            </form>
+            </li>
+          </ul>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            Register
+          </a>
+          <ul class="dropdown-menu">
+            <li class='dropdown-padding'>
+               <form action="index.php?" method="POST" class="navbar-form">
+                  <?php echo Security::generate_and_print_form_inputs('register')?>
+                  <input type="hidden" name="action" value="register">
+                  <input type="text" name="user"  placeholder="username">
+                  <input type="password" name="password"  placeholder="password">
+                  <button type="submit" class="btn">Register</button>
+                </form>
+            </li>
+          </ul>
+        </li>
+      <?php else : ?>
+        <li class='navbar-text pull-right-padding'><p class="navbar-text">Hi, <?php echo htmlentities(User::get_name()); ?>!</p></li>
+        <li class='pull-right-padding'>
+          <form action="index.php?" method="POST" class="navbar-form">
+            <?php echo Security::generate_and_print_form_inputs('logout')?>
+            <input type="hidden" name="action" value="logout">
+            <button type="submit" class="btn">Logout</button>
+          </form>
+        </li>
+      <?php endif; ?>
+          <li>
+            <form action="search.php" class="navbar-form">
+              <input type="text" name="tag" class="span2">
+              <button type="submit" class="btn">Search Tags</button>
+            </form>
+          </li>
+        </ul>
       </div>
  
     </div>
   </div>
 </div>
-
 <div class="container">
 <div class="row">
 <div class="media span6">
+<?php foreach(array('error', 'warning', 'success', 'info') as $type) : ?>
+<?php if(!empty($msg[$type])) : ?>
+  <?php foreach($msg[$type] as $m) : ?>
+  <div class='alert alert-<?php echo $type; ?>'><?php echo $m ?></div>
+  <?php endforeach; ?>
+<?php endif; ?>
+<?php endforeach; ?>
+
 <?php
-
-
-
 foreach($bookmarks as $b){
 $uri=parse_url($b->uri);
 ?>
